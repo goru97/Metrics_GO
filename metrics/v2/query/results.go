@@ -10,18 +10,33 @@ type GetResult struct {
 	gophercloud.Result
 }
 
+type MetricList struct {
+	Metrics []struct {
+		Unit string `mapstructure:"unit"`
+		Metric string `mapstructure:"metric"`
+		Data []Value `mapstructure:"data"`
+		Type string `mapstructure:"type"`
+	}
+}
+
+type Metric struct {
+	Metric string `mapstructure:"metric"`
+}
+
 type MetricData struct {
 	Unit string `mapstructure:"unit"`
 	Values []Value `mapstructure:"values"`
-	Metadata MetaData `mapstructure:"metadata"`
+	MetaData MetaData `mapstructure:"metadata"`
 }
 type Value struct {
 	NumPoints int32 `mapstructure:"numPoints"`
 	TimeStamp int64 `mapstructure:"timestamp"`
-	Average int64 `mapstructure:"average"`
-	Sum int64 `mapstructure:"sum"`
-	Max int64 `mapstructure:"max"`
-	Latest int64 `mapstructure:"latest"`
+	Average float64 `mapstructure:"average"`
+	Sum float64 `mapstructure:"sum"`
+	Max float64 `mapstructure:"max"`
+	Min float64 `mapstructure:"min"`
+	Latest float64 `mapstructure:"latest"`
+	Variance float64 `mapstructure:"variance"`
 }
 
 type MetaData struct {

@@ -2,14 +2,16 @@ package query
 
 import (
 	"github.com/rackspace/gophercloud"
-	"errors"
 	"github.com/mitchellh/mapstructure"
 )
 
 const(
 	SUM = "sum"
 	MAX = "max"
+	MIN = "min"
 	LATEST = "latest"
+	VARIANCE = "variance"
+	AVERAGE = "averge"
 )
 
 const(
@@ -21,61 +23,58 @@ const(
 	MIN1440 = "min1440"
 )
 
-// GetListByPoints retrieve data for a list of metrics for the specified tenant associated with RackspaceMetrics.
-//TODO: Change Request Payload Structure in Blueflood
-/*func GetDataByPoints(c *gophercloud.ServiceClient, from int64, to int64, points int32, metrics ...string) GetResult {
+// GetDataForListByPoints retrieve data for a list of metrics for the specified tenant associated with RackspaceMetrics.
+func GetDataForListByPoints(c *gophercloud.ServiceClient, from int64, to int64, points int32, metrics ...string) (MetricList, error) {
 	var res GetResult
-	slc, _ := json.Marshal(metrics)
-	reqBody := string(slc)
-	fmt.Println(reqBody)
+	reqBody := make([]interface{}, len(metrics))
+	for i, v := range metrics {
+		reqBody[i] = v
+	}
 	_, res.Err = c.Post(getDataForList(c, from, to, points),reqBody, &res.Body, nil)
-	return res
-}*/
+	b := res.Body.(interface{})
+	var metricList MetricList
+	err := mapstructure.Decode(b,&metricList)
+	return metricList, err
+}
+
 
 func GetDataByPoints(c *gophercloud.ServiceClient, metric string, from int64, to int64, points int32, sel ...string) GetResult {
 	var res GetResult
-	if len(sel) >1{
-		 res.Err = errors.New("Only one select parameter is allowed.")
-    return res
-	}else {
-		if len(sel) == 1{
-			_, res.Err = c.Get(getURLForPointsWithSelect(c, metric, from, to, points,sel[0]), &res.Body, nil)
+		if len(sel) >= 1{
+			_, res.Err = c.Get(getURLForPointsWithSelect(c, metric, from, to, points, sel), &res.Body, nil)
 			return res
 		}
 		_, res.Err = c.Get(getURLForPoints(c, metric, from, to, points), &res.Body, nil)
 		return res
-    }
 }
 
 func GetDataByResolution(c *gophercloud.ServiceClient, metric string, from int64, to int64, resolution string, sel ...string) GetResult {
 	var res GetResult
-	if len(sel) >1{
-		res.Err = errors.New("Only one select parameter is allowed.")
-		return res
-	}else {
-		if len(sel) == 1{
-			_, res.Err = c.Get(getURLForResolutionWithSelect(c, metric, from, to, resolution, sel[0]), &res.Body, nil)
+		if len(sel) >= 1{
+			_, res.Err = c.Get(getURLForResolutionWithSelect(c, metric, from, to, resolution, sel), &res.Body, nil)
 			return res
 		}
 		_, res.Err = c.Get(getURLForResolution(c, metric, from, to, resolution), &res.Body, nil)
 		return res
-	}
 }
 
 // Limits retrieves the number of API transaction that are available for the specified tenant associated with RackspaceMetrics.
-func Limits(c *gophercloud.ServiceClient) GetResult {
+//TODO: Fix response code at Blueflood/Repose end
+/*func Limits(c *gophercloud.ServiceClient) GetResult {
 	var res GetResult
 	_, res.Err = c.Get(getLimits(c), &res.Body, nil)
 	return res
-}
+}*/
 
 // SearchMetric retrieves a list of available metrics for the specified tenant associated with RackspaceMetrics.
-func SearchMetric(c *gophercloud.ServiceClient, metric string) GetResult {
+func SearchMetric(c *gophercloud.ServiceClient, metric string) ([]Metric, error) {
 	var res GetResult
 	_, res.Err = c.Get(getSearchURL(c, metric), &res.Body, nil)
-	return res
+	b := res.Body.(interface{})
+	var metrics []Metric
+	err := mapstructure.Decode(b,&metrics)
+	return metrics, err
 }
-
 //GetEvents retrieves a list of events for the specified tenant associated with RackspaceMetrics.
 func GetEvents(c *gophercloud.ServiceClient, from int64, until int64, tag ...string) ([]Event, error) {
 	var res GetResult
