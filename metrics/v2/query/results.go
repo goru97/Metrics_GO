@@ -10,13 +10,15 @@ type GetResult struct {
 	gophercloud.Result
 }
 
+type MetricListData struct {
+	Metrics []MetricList `mapstructure:"metrics"`
+}
+
 type MetricList struct {
-	Metrics []struct {
 		Unit string `mapstructure:"unit"`
 		Metric string `mapstructure:"metric"`
 		Data []Value `mapstructure:"data"`
 		Type string `mapstructure:"type"`
-	}
 }
 
 type Metric struct {

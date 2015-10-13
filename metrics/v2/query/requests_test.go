@@ -8,6 +8,127 @@ import (
 )
 
 const DUMMY_METRIC  = "rollup01.iad.blueflood.rollup.com.rackspacecloud.blueflood.service.RollupService.Rollup-Execution-Timer.count"
+
+const DUMMY_METRIC_FOR_LIST_OF_METRICS = `{
+	"metrics": [
+	{
+	"unit": "unknown",
+	"metric": "rollup00.iad.blueflood.rollup.com.rackspacecloud.blueflood.service.RollupService.Rollup-Execution-Timer.count",
+	"data": [
+	{
+	"numPoints": 2431,
+	"timestamp": 1444348800000,
+	"average": 24496343044.07
+	},
+	{
+	"numPoints": 2454,
+	"timestamp": 1444435200000,
+	"average": 26603334416.81
+	},
+	{
+	"numPoints": 2361,
+	"timestamp": 1444521600000,
+	"average": 28768126895.46
+	}
+	],
+	"type": "number"
+	},
+	{
+	"unit": "unknown",
+	"metric": "rollup01.iad.blueflood.rollup.com.rackspacecloud.blueflood.service.RollupService.Rollup-Execution-Timer.count",
+	"data": [
+	{
+	"numPoints": 2241,
+	"timestamp": 1444348800000,
+	"average": 20980428271.97
+	},
+	{
+	"numPoints": 2304,
+	"timestamp": 1444435200000,
+	"average": 23165844830.65
+	},
+	{
+	"numPoints": 2116,
+	"timestamp": 1444521600000,
+	"average": 25393982846.12
+	}
+	],
+	"type": "number"
+	}
+	]
+	}`
+
+func TestGetDataForListByPoints(t *testing.T) {
+	th.SetupHTTP()
+	defer th.TeardownHTTP()
+	th.Mux.HandleFunc("/views", func(w http.ResponseWriter, r *http.Request) {
+		th.TestMethod(t, r, "POST")
+		th.TestHeader(t, r, "X-Auth-Token", fake.TokenID)
+		th.TestHeader(t, r, "Accept", "application/json")
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		fmt.Fprintf(w, DUMMY_METRIC_FOR_LIST_OF_METRICS)
+	})
+
+	// Expected metric data when queried using list of metrics.
+	expectedMetrics := MetricListData{
+		Metrics: []MetricList {
+			MetricList{
+			Unit: "unknown",
+			Metric: "rollup00.iad.blueflood.rollup.com.rackspacecloud.blueflood.service.RollupService.Rollup-Execution-Timer.count",
+			Data: []Value {
+				Value{
+					NumPoints: 2431,
+					TimeStamp: 1444348800000,
+					Average: 24496343044.07,
+				},
+				Value{
+					NumPoints: 2454,
+					TimeStamp: 1444435200000,
+					Average: 26603334416.81,
+				},
+				Value{
+					NumPoints: 2361,
+					TimeStamp: 1444521600000,
+					Average: 28768126895.46,
+				},
+			},
+			Type: "number",
+		},
+		MetricList{
+				Unit: "unknown",
+				Metric: "rollup01.iad.blueflood.rollup.com.rackspacecloud.blueflood.service.RollupService.Rollup-Execution-Timer.count",
+				Data: []Value {
+					Value{
+						NumPoints: 2241,
+						TimeStamp: 1444348800000,
+						Average: 20980428271.97,
+					},
+					Value{
+						NumPoints: 2304,
+						TimeStamp: 1444435200000,
+						Average: 23165844830.65,
+					},
+					Value{
+						NumPoints: 2116,
+						TimeStamp: 1444521600000,
+						Average: 25393982846.12,
+					},
+				},
+				Type: "number",
+			},
+		},
+	}
+
+	// Actual metric data when queried using list of metrics.
+	actualMetrics, err := GetDataForListByPoints(fake.ServiceClient(), 1444354736000, 1444602340000, 3,
+		"rollup00.iad.blueflood.rollup.com.rackspacecloud.blueflood.service.RollupService.Rollup-Execution-Timer.count",
+		"rollup01.iad.blueflood.rollup.com.rackspacecloud.blueflood.service.RollupService.Rollup-Execution-Timer.count")
+	th.AssertNoErr(t, err)
+	th.AssertDeepEquals(t, expectedMetrics, actualMetrics)
+}
+
 const DUMMY_METRIC_DATA_FOR_FIVE_POINTS = `{
   "metadata": {
     "count": 5,

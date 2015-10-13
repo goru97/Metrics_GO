@@ -24,7 +24,7 @@ const(
 )
 
 // GetDataForListByPoints retrieve data for a list of metrics for the specified tenant associated with RackspaceMetrics.
-func GetDataForListByPoints(c *gophercloud.ServiceClient, from int64, to int64, points int32, metrics ...string) (MetricList, error) {
+func GetDataForListByPoints(c *gophercloud.ServiceClient, from int64, to int64, points int32, metrics ...string) (MetricListData, error) {
 	var res GetResult
 	reqBody := make([]interface{}, len(metrics))
 	for i, v := range metrics {
@@ -32,7 +32,7 @@ func GetDataForListByPoints(c *gophercloud.ServiceClient, from int64, to int64, 
 	}
 	_, res.Err = c.Post(getDataForList(c, from, to, points),reqBody, &res.Body, nil)
 	b := res.Body.(interface{})
-	var metricList MetricList
+	var metricList MetricListData
 	err := mapstructure.Decode(b,&metricList)
 	return metricList, err
 }
